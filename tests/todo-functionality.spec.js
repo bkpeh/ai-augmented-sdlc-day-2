@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
 
+// Shared selector for task count heading
+const TASK_COUNT_HEADING = /\d+ tasks? remaining/;
+
 test.describe("TodoMatic - Core Functionality", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -187,8 +190,9 @@ test.describe("TodoMatic - Filtering", () => {
   });
 
   test("shows all initial tasks by default", async ({ page }) => {
-    // Default tasks: Eat (completed), Sleep, Repeat
+    // Verify the app loads with its default tasks
     const listItems = page.getByRole("listitem");
+    // The app starts with 3 default tasks: Eat (completed), Sleep, Repeat
     await expect(listItems).toHaveCount(3);
     
     // Use exact match to avoid partial matches
@@ -240,22 +244,22 @@ test.describe("TodoMatic - Filtering", () => {
   });
 
   test("task counter shows active tasks count across filters", async ({ page }) => {
-    const heading = page.getByRole("heading", { name: /tasks? remaining/ });
+    const heading = page.getByRole("heading", { name: TASK_COUNT_HEADING });
     
     // Get the initial active task count
     await heading.waitFor();
     const initialText = await heading.textContent();
     
     // All filter - should show count of active tasks
-    await expect(heading).toContainText(/\d+ tasks? remaining/);
+    await expect(heading).toContainText(TASK_COUNT_HEADING);
     
     // Active filter - should still show count of active tasks
     await page.getByRole("button", { name: "Show Active tasks" }).click();
-    await expect(heading).toContainText(/\d+ tasks? remaining/);
+    await expect(heading).toContainText(TASK_COUNT_HEADING);
     
     // Completed filter - should still show count of active tasks (not changed by filter)
     await page.getByRole("button", { name: "Show Completed tasks" }).click();
-    await expect(heading).toContainText(/\d+ tasks? remaining/);
+    await expect(heading).toContainText(TASK_COUNT_HEADING);
     
     // Back to All - should still show the same count
     await page.getByRole("button", { name: "Show All tasks" }).click();
@@ -270,19 +274,28 @@ test.describe("TodoMatic - Task Counter", () => {
 
   test("displays task count with correct grammar", async ({ page }) => {
     // Check that the count is displayed (default has some active tasks)
-    const heading = page.getByRole("heading", { name: /tasks? remaining/ });
+    const heading = page.getByRole("heading", { name: TASK_COUNT_HEADING });
     await expect(heading).toBeVisible();
     const text = await heading.textContent();
-    expect(text).toMatch(/\d+ tasks? remaining/);
+    expect(text).toMatch(TASK_COUNT_HEADING);
   });
 
-  test("uses singular form when appropriate", async ({ page }) => {
-    // The app should use "task" (singular) when count is 1
-    // This test just verifies the pattern exists in the app
-    const heading = page.getByRole("heading", { name: /tasks? remaining/ });
-    const text = await heading.textContent();
+  test("handles singular and plural task counts correctly", async ({ page }) => {
+    // This test verifies that the app properly handles task/tasks grammar
+    // The app uses "task" (singular) when count is 1, and "tasks" (plural) otherwise
+    const heading = page.getByRole("heading", { name: TASK_COUNT_HEADING });
+    await expect(heading).toBeVisible();
     
-    // Just verify it matches the pattern (number + task/tasks + remaining)
+    // Verify the heading follows the pattern: number + "task" or "tasks" + "remaining"
+    const text = await heading.textContent();
     expect(text).toMatch(/\d+ tasks? remaining/);
+    
+    // The specific text depends on the current state, but the grammar should be correct
+    const count = parseInt(text.match(/\d+/)[0]);
+    if (count === 1) {
+      expect(text).toContain("1 task remaining");
+    } else {
+      expect(text).toContain(`${count} tasks remaining`);
+    }
   });
 });

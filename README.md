@@ -19,6 +19,40 @@ yarn && yarn dev
 
 More information about the available commands can be found in the [Contributing](CONTRIBUTING.md) guide.
 
+## Testing
+
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing. The test suite covers the core functionality of the TodoMatic application, including:
+
+- Adding, editing, and deleting todos
+- Marking todos as complete/incomplete
+- Filtering todos by status (All, Active, Completed)
+- Task counter updates
+
+### Running Tests
+
+To run the tests, first ensure you have installed the dependencies:
+
+```bash
+yarn install
+```
+
+Then run the test suite:
+
+```bash
+yarn test
+```
+
+For interactive test debugging, you can use the Playwright UI mode:
+
+```bash
+yarn test:ui
+```
+
+### Test Structure
+
+- `tests/button-task.spec.js` - Tests for button styling and interactions
+- `tests/todo-functionality.spec.js` - Comprehensive tests for todo app functionality
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
